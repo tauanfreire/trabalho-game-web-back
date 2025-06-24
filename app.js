@@ -18,20 +18,8 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
 });
 
-// ✅ Teste de rota simples
-app.get("/", async (req, res) => {
-  try {
-    const SQL = "SELECT * FROM paises WHERE capital = 'Brasília'";
-    const [results] = await pool.query(SQL);
-    res.status(200).json(results);
-  } catch (error) {
-    console.error("Erro na rota '/'", error);
-    res.status(500).json({ error: "Erro no servidor" });
-  }
-});
 
-// ✅ Buscar todos os jogos
-app.get("/jogo", async (req, res) => {
+app.get("/jogos", async (req, res) => {
   try {
     const SQL = "SELECT * FROM jogos";
     const [results] = await pool.query(SQL);
@@ -42,7 +30,19 @@ app.get("/jogo", async (req, res) => {
   }
 });
 
-// ✅ Buscar jogo por título
+app.get("/meus-jogos/:id", async (req, res) => {
+  try {
+    const {id} = req.params
+
+    const SQL = "SELECT * FROM jogos WHERE criador_id = ?";
+    const [results] = await pool.query(SQL, id);
+    res.status(200).json(results);
+  } catch (error) {
+    console.error("Erro ao buscar jogos desse criador:", error);
+    res.status(500).json({ error: "Erro no servidor" });
+  }
+});
+
 app.get("/jogo/:titulo", async (req, res) => {
   try {
     const { titulo } = req.params;
@@ -60,7 +60,6 @@ app.get("/jogo/:titulo", async (req, res) => {
   }
 });
 
-// ✅ Buscar jogo por ID (para jogar)
 app.get("/jogar/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -78,7 +77,6 @@ app.get("/jogar/:id", async (req, res) => {
   }
 });
 
-// ✅ Buscar conteúdo de termo-definição por jogo_id
 app.get("/termo-definicao/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -96,7 +94,6 @@ app.get("/termo-definicao/:id", async (req, res) => {
   }
 });
 
-// ✅ Buscar conteúdo de item-categoria por jogo_id
 app.get("/item-categoria/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -114,7 +111,6 @@ app.get("/item-categoria/:id", async (req, res) => {
   }
 });
 
-// ✅ Criar novo jogo
 app.post("/jogo", async (req, res) => {
   try {
     const { titulo, descricao, criador_id, tipo_jogo } = req.body;
@@ -134,7 +130,6 @@ app.post("/jogo", async (req, res) => {
   }
 });
 
-// ✅ Inserir itens-categorias
 app.post("/item-categoria", async (req, res) => {
   try {
     const { conteudo, jogo_id } = req.body;
@@ -156,7 +151,6 @@ app.post("/item-categoria", async (req, res) => {
   }
 });
 
-// ✅ Inserir termos-definições
 app.post("/termo-definicao", async (req, res) => {
   try {
     const { conteudo, jogo_id } = req.body;
@@ -178,7 +172,6 @@ app.post("/termo-definicao", async (req, res) => {
   }
 });
 
-// ✅ Atualizar tipo_jogo de um jogo existente
 app.put("/jogo/tipo/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -198,7 +191,6 @@ app.put("/jogo/tipo/:id", async (req, res) => {
   }
 });
 
-// ✅ Atualizar tipo_jogo de um jogo existente
 app.put("/usuario/alterar-senha/", async (req, res) => {
   try {
     const {email, novaSenha} = req.body;
@@ -219,31 +211,7 @@ app.put("/usuario/alterar-senha/", async (req, res) => {
   }
 });
 
-// // Buscar dados para jogar o jogo "arrastar-soltar"
-// app.get('/jogos/:id/jogar/arrastar-soltar', async (req, res) => {
-//   const { id } = req.params;
-
-//   try {
-//     // Aqui vamos buscar os dados relacionados ao jogo, por exemplo,
-//     // buscar os itens e categorias do jogo com id informado.
-//     // Supondo que esses dados estejam na tabela jogo_item_categoria.
-
-//     const SQL = 'SELECT item, categoria FROM jogo_item_categoria WHERE jogo_id = ?';
-//     const [results] = await pool.query(SQL, [id]);
-
-//     if (results.length === 0) {
-//       return res.status(404).json({ error: 'Dados para arrastar e soltar não encontrados' });
-//     }
-
-//     // Retornar os dados no formato esperado pelo frontend
-//     res.json({ dados: results });
-//   } catch (error) {
-//     console.error('Erro na rota /jogos/:id/jogar/arrastar-soltar:', error);
-//     res.status(500).json({ error: 'Erro no servidor' });
-//   }
-// });
-
-app.get('/jogos/:id/jogar/arrastar-soltar', async (req, res) => {
+app.get('/jogos/:id/jogar/associacao', async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -258,30 +226,11 @@ app.get('/jogos/:id/jogar/arrastar-soltar', async (req, res) => {
 
     res.json({ dados: results });
   } catch (error) {
-    console.error('Erro na rota /jogos/:id/jogar/arrastar-soltar:', error);
+    console.error('Erro na rota /jogos/:id/jogar/associacao:', error);
     res.status(500).json({ error: 'Erro no servidor' });
   }
 });
 
-// app.get('/jogos/:id/jogar/quiz', async (req, res) => {
-//   const { id } = req.params;
-
-//   try {
-//     const [termosDefinicoes] = await pool.query(
-//       'SELECT termo, definicao FROM jogo_termo_definicao WHERE jogo_id = ?', 
-//       [id]
-//     );
-
-//     if (termosDefinicoes.length === 0) {
-//       return res.status(404).json({ error: 'Questões do quiz não encontradas' });
-//     }
-
-//     res.json({ dados: termosDefinicoes });
-//   } catch (error) {
-//     console.error('Erro ao buscar quiz:', error);
-//     res.status(500).json({ error: 'Erro no servidor' });
-//   }
-// });
 
 app.get('/jogos/:id/jogar/quiz', async (req, res) => {
   const { id } = req.params;
@@ -312,7 +261,6 @@ app.get('/jogos/:id/jogar/quiz', async (req, res) => {
   }
 });
 
-// ✅ Criar novo jogo
 app.post("/usuario/cadastrar", async (req, res) => {
   try {
     const { nome, email, senha} = req.body;
@@ -331,7 +279,6 @@ app.post("/usuario/cadastrar", async (req, res) => {
   }
 });
 
-// ✅ Buscar conteúdo de item-categoria por jogo_id
 app.get("/login", async (req, res) => {
   try {
     // const {email, senha} = req.params;
@@ -350,6 +297,86 @@ app.get("/login", async (req, res) => {
   }
 });
 
+app.get("/usuario-id/:email", async (req, res) => {
+  try {
+    const {email} = req.params;
+
+    const SQL = `SELECT id FROM usuarios WHERE email = ?`;
+    // const SQL = `SELECT * FROM usuarios WHERE email = ? AND senha = ?`;
+    const [results] = await pool.query(SQL, email);
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Usuário Não encontrado por esse email" });
+    }
+    res.status(200).json(results);
+
+  } catch (error) {
+    console.error("Erro ao consultar usuário por esse email:", error);
+    res.status(500).json({ error: "Erro no servidor" });
+  }
+});
+
+// app.get("/rankig/:jogo_id/:modo", async (req, res) => {
+//   try {
+//     const {jogo_id, modo} = req.params;
+
+//     const SQL = `SELECT * FROM resultado WHERE jogo_id = ? AND modo_jogo = ?`;
+//     // const SQL = `SELECT * FROM usuarios WHERE email = ? AND senha = ?`;
+//     const [results] = await pool.query(SQL, [jogo_id, modo]);
+
+//     if (results.length === 0) {
+//       return res.status(404).json({ error: "Usuário Não encontrado por esse email" });
+//     }
+//     res.status(200).json(results);
+
+//   } catch (error) {
+//     console.error("Erro ao consultar usuário por esse email:", error);
+//     res.status(500).json({ error: "Erro no servidor" });
+//   }
+// });
+
+app.get("/ranking/:jogo_id/:modo", async (req, res) => {
+  try {
+    const { jogo_id, modo } = req.params;
+
+    const SQL = `
+      SELECT 
+        u.nome, r.acertos, r.erros, r.tempo
+      FROM 
+        resultados r
+      JOIN 
+        usuarios u ON r.usuario_id = u.id
+      WHERE 
+        r.jogo_id = ? AND r.modo_jogo = ?
+    `;
+
+    const [results] = await pool.query(SQL, [jogo_id, modo]);
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Nenhum resultado encontrado para este jogo." });
+    }
+
+    res.status(200).json(results);
+  } catch (error) {
+    console.error("Erro ao buscar ranking:", error);
+    res.status(500).json({ error: "Erro interno no servidor." });
+  }
+});
+
+
+app.post("/resultado", async (req, res) => {
+  try {
+    const {acertos, erros, tempo, jogo_id, usuario_id, modo_jogo} = req.body;
+
+    const SQL = `INSERT INTO resultados (acertos, erros, tempo, jogo_id, usuario_id, modo_jogo) VALUES (?, ?, ?, ?, ?, ?)`;
+    await pool.query(SQL, [acertos, erros, tempo, jogo_id, usuario_id, modo_jogo]);
+
+    res.status(201).json({ message: "Resultado gurdado com sucesso"});
+  } catch (error) {
+    console.error("Erro ao cadastrar resultado:", error);
+    res.status(500).json({ error: "Erro na rota: post/resultado" });
+  }
+});
 
 
 
