@@ -197,7 +197,7 @@ app.get("/ranking/:jogo_id/:modo", async (req, res) => {
   try {
     const { jogo_id, modo } = req.params;
     const SQL = `
-      SELECT u.nome, r.acertos, r.erros, r.tempo
+      SELECT u.nome, r.acertos, r.erros, r.tempo, r.pontuacao
       FROM resultados r
       JOIN usuarios u ON r.usuario_id = u.id
       WHERE r.jogo_id = ? AND r.modo_jogo = ?
@@ -322,10 +322,10 @@ app.post("/usuario/cadastrar", async (req, res) => {
 // Registrar resultado de um jogo
 app.post("/resultado", async (req, res) => {
   try {
-    const { acertos, erros, tempo, jogo_id, usuario_id, modo_jogo } = req.body;
+    const { acertos, erros, tempo, pontuacao, jogo_id, usuario_id, modo_jogo } = req.body;
 
-    const SQL = "INSERT INTO resultados (acertos, erros, tempo, jogo_id, usuario_id, modo_jogo) VALUES (?, ?, ?, ?, ?, ?)";
-    await pool.query(SQL, [acertos, erros, tempo, jogo_id, usuario_id, modo_jogo]);
+    const SQL = "INSERT INTO resultados (acertos, erros, tempo, pontuacao, jogo_id, usuario_id, modo_jogo) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    await pool.query(SQL, [acertos, erros, tempo, pontuacao, jogo_id, usuario_id, modo_jogo]);
 
     return res.status(201).json({ message: "Resultado guardado com sucesso" });
   } catch (error) {
